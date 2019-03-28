@@ -12,9 +12,29 @@ spring:
     password: guest
   jpa:
     show-sql: true
+  datasource:
+    username: jbone_sys
+    password: Jbone_sys_666
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://121.42.174.77:3306/jbone_sys?useUnicode=true&characterEncoding=utf8&autoReconnect=true&rewriteBatchedStatements=TRUE&useSSL=false
+
+#
+# 以下为 zipkin客户端配置
+#
   sleuth:
     sampler:
-      percentage: 1
+      probability: 1
+    messaging:
+      enabled: true
+      rabbit:
+        enabled: true
+  zipkin:
+    sender:
+      type: rabbit
+zipkin.rabbitmq.queue: zipkin
+
+# ###
+
 #注册中心
 eureka:
   client:
@@ -24,11 +44,19 @@ eureka:
       defaultZone: http://localhost:10001/eureka
   instance:
     prefer-ip-address: true
-    instance-id: http://${spring.cloud.client.ipAddress}:${server.port}
+    instance-id: ${spring.cloud.client.ip-address}:${spring.application.name}:${server.port}
 
+# 服务管理配置
 management:
-  security:
-    enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: "*"        #暴漏的接口，"*"表示所有web监控接口
+        exclude:            #不暴漏的接口
+      base-path: /actuator  #监控根路径
+  endpoint:
+    health:
+      show-details: ALWAYS
 
 hystrix:
   command:
@@ -47,27 +75,19 @@ hystrix:
 jbone:
   #当前系统名，在系统管理里面对应的名字
   sys:
-    serverName: jbone-sys-admin
-    jdbc:
-      url: jdbc:mysql://121.42.174.77:3306/jbone_sys?useUnicode=true&characterEncoding=utf8&autoReconnect=true&rewriteBatchedStatements=TRUE
-      username: jbone_sys
-      password: Jbone_sys_666
-      driverClassName: com.mysql.jdbc.Driver
-      maxActive: 10
-      initialSize: 2
-      maxWait: 10000
+    serverName: jbone-sys-server
+
 
 # info接口返回值
 info:
   app:
-    java:
-      source: ${java.version}
-      target: ${java.version}
     name: ${spring.application.name}
-  git:
-    url: https://github.com/417511458/jbone
-  gitee:
-    url: https://gitee.com/majunwei2017/jbone
+    version: 1.0.0
+  java:
+    version: ${java.version}
+  code:
+    git: https://github.com/417511458/jbone
+    gitee: https://gitee.com/majunwei2017/jbone
   domain: http://www.majunwei.com
 
 

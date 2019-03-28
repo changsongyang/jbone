@@ -4,14 +4,24 @@
         <artifactId>jbone</artifactId>
         <groupId>cn.jbone</groupId>
         <version>1.0.0</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>jbone-cms</artifactId>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
 
     <name>jbone-cms</name>
     <url>内容管理模块</url>
+    <modules>
+        <module>jbone-cms-core</module>
+        <module>jbone-cms-common</module>
+        <module>jbone-cms-api</module>
+        <module>jbone-cms-server</module>
+        <module>jbone-cms-admin</module>
+        <module>jbone-cms-portal</module>
+        <module>jbone-cms-api-starter</module>
+    </modules>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

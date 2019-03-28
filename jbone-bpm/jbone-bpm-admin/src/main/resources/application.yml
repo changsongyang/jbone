@@ -19,7 +19,7 @@ spring:
   jpa:
     show-sql: true
   datasource:
-    url: jdbc:mysql://121.42.174.77:3306/jbone_bpm?useUnicode=true&characterEncoding=utf8&autoReconnect=true&rewriteBatchedStatements=TRUE
+    url: jdbc:mysql://121.42.174.77:3306/jbone_bpm?useUnicode=true&characterEncoding=utf8&autoReconnect=true&rewriteBatchedStatements=TRUE&useSSL=false
     username: jbone_bpm
     password: Jbone_bpm_666
 #服务
@@ -35,7 +35,7 @@ eureka:
       defaultZone: http://localhost:10001/eureka
   instance:
     prefer-ip-address: true
-    instance-id: http://${spring.cloud.client.ipAddress}:${server.port}
+    instance-id: ${spring.cloud.client.ip-address}:${server.port}
 
 management:
   security:
@@ -55,7 +55,7 @@ jbone:
     #未授权的跳转路径，默认"/403"
     unauthorizedUrl: /403
     #客户端Session失效时间，默认30分钟
-    clientSessionTimeout: 180000
+    clientSessionTimeout: 1800000
     #权限过滤规则
     filterChainDefinition:
       /health: anon
@@ -92,16 +92,28 @@ jbone:
 # info接口返回值
 info:
   app:
-    java:
-      source: ${java.version}
-      target: ${java.version}
     name: ${spring.application.name}
-  git:
-    url: https://github.com/417511458/jbone
-  gitee:
-    url: https://gitee.com/majunwei2017/jbone
+    version: 1.0.0
+  java:
+    version: ${java.version}
+  code:
+    git: https://github.com/417511458/jbone
+    gitee: https://gitee.com/majunwei2017/jbone
   domain: http://www.majunwei.com
 
 feign:
   httpclient:
     enabled: true
+
+# 启用超时设置
+hystrix.command.default.execution.timeout.enabled: true
+# 熔断时间为10S
+hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds: 10000
+# 使用线程隔离熔断
+hystrix.command.default.execution.isolation.strategy: THREAD
+# 核心线程数100
+hystrix.threadpool.default.coreSize: 100
+# 超时时熔断
+hystrix.command.default.execution.isolation.thread.interruptOnTimeout: true
+# 取消时是否熔断
+hystrix.command.default.execution.isolation.thread.interruptOnCancel: false

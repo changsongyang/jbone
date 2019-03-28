@@ -90,7 +90,7 @@
             <AppenderRef ref="casConsole"/>
             <AppenderRef ref="casFile"/>
         </AsyncLogger>
-        <AsyncLogger name="org.apereo" level="info" additivity="false" includeLocation="true">
+        <AsyncLogger name="org.apereo" level="debug" additivity="false" includeLocation="true">
             <AppenderRef ref="casConsole"/>
             <AppenderRef ref="casFile"/>
         </AsyncLogger>
@@ -99,10 +99,6 @@
             <AppenderRef ref="casFile"/>
         </AsyncLogger>
         <AsyncLogger name="org.apache" level="error" additivity="false">
-            <AppenderRef ref="casConsole"/>
-            <AppenderRef ref="casFile"/>
-        </AsyncLogger>
-        <AsyncLogger name="org.springframework.cloud" level="info" additivity="false">
             <AppenderRef ref="casConsole"/>
             <AppenderRef ref="casFile"/>
         </AsyncLogger>
@@ -125,7 +121,7 @@
         <AsyncLogger name="org.springframework.boot.actuate.autoconfigure" level="warn" additivity="false">
             <AppenderRef ref="casConsole"/>
         </AsyncLogger>
-        <AsyncLogger name="org.springframework.webflow" level="warn" additivity="false">
+        <AsyncLogger name="org.springframework.webflow" level="info" additivity="false">
             <AppenderRef ref="casConsole"/>
             <AppenderRef ref="casFile"/>
         </AsyncLogger>
@@ -161,7 +157,7 @@
             <AppenderRef ref="casConsole"/>
             <AppenderRef ref="casFile"/>
         </AsyncLogger>
-        <AsyncLogger name="org.pac4j" level="warn" additivity="false">
+        <AsyncLogger name="org.pac4j" level="info" additivity="false">
             <AppenderRef ref="casConsole"/>
             <AppenderRef ref="casFile"/>
         </AsyncLogger>
@@ -193,6 +189,11 @@
             <AppenderRef ref="casConsole"/>
             <AppenderRef ref="casFile"/>
         </AsyncLogger>
+        <AsyncLogger name="org.apereo.cas" level="debug" additivity="true" includeLocation="true">
+            <AppenderRef ref="casFile"/>
+            <AppenderRef ref="casConsole"/>
+        </AsyncLogger>
+
         <AsyncLogger name="org.springframework.context.annotation" level="off" additivity="false" />
         <AsyncLogger name="org.springframework.boot.devtools" level="off" additivity="false" />
         <AsyncLogger name="org.jasig.spring" level="warn" additivity="false">
@@ -214,14 +215,40 @@
         <AsyncLogger name="perfStatsLogger" level="info" additivity="false" includeLocation="true">
             <AppenderRef ref="casPerf"/>
         </AsyncLogger>
+
         <AsyncLogger name="org.apereo.cas.web.flow" level="info" additivity="true" includeLocation="true">
             <AppenderRef ref="casFile"/>
+            <AppenderRef ref="casConsole"/>
         </AsyncLogger>
         <AsyncLogger name="org.apereo.inspektr.audit.support" level="info" includeLocation="true">
             <AppenderRef ref="casAudit"/>
             <AppenderRef ref="casFile"/>
         </AsyncLogger>
-        <AsyncRoot level="error">
+        <AsyncLogger name="org.springframework.data" level="info" includeLocation="true">
+            <AppenderRef ref="casConsole"/>
+            <AppenderRef ref="casFile"/>
+        </AsyncLogger>
+        <AsyncLogger name="com.netflix" level="debug" includeLocation="true">
+            <AppenderRef ref="casConsole"/>
+            <AppenderRef ref="casFile"/>
+        </AsyncLogger>
+        <AsyncLogger name="org.springframework.cloud" level="debug" includeLocation="true">
+            <AppenderRef ref="casConsole"/>
+            <AppenderRef ref="casFile"/>
+        </AsyncLogger>
+        <AsyncLogger name="zipkin2" level="debug" includeLocation="true">
+            <AppenderRef ref="casConsole"/>
+            <AppenderRef ref="casFile"/>
+        </AsyncLogger>
+        <AsyncLogger name="zipkin" level="debug" includeLocation="true">
+            <AppenderRef ref="casConsole"/>
+            <AppenderRef ref="casFile"/>
+        </AsyncLogger>
+        <AsyncLogger name="org.pac4j" level="info" additivity="false">
+            <AppenderRef ref="casConsole"/>
+            <AppenderRef ref="casFile"/>
+        </AsyncLogger>
+        <AsyncRoot level="info">
             <AppenderRef ref="casConsole"/>
         </AsyncRoot>
     </Loggers>

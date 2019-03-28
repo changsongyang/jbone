@@ -5,12 +5,12 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
-    <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">CAS &#8211; JBone认证中心</title>
+    <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">CAS &#8211; Jbone认证中心</title>
 
 
     <link rel="stylesheet" th:href="@{#{webjars.fontawesomemin.css}}"/>
     <link type="text/css" rel="stylesheet" th:href="@{#{webjars.bootstrapmin.css}}"/>
-    <link type="text/css" rel="stylesheet" th:href="@{#{webjars.latomin.css}}"/>
+    <!--<link type="text/css" rel="stylesheet" th:href="@{#{webjars.latomin.css}}"/>-->
 
     <link rel="stylesheet" th:href="@{${#themes.code('standard.custom.css.file')}}"/>
 
@@ -45,17 +45,13 @@
 </head>
 
 <body>
-<div th:replace="fragments/css :: #css"></div>
-<div th:replace="fragments/js :: #js"></div>
-
-<div id="container" class="container login-box">
-    <div class="login-logo">
-        <b>Jbone</b>CAS
-    </div>
+<div id="container">
+    <!-- <div th:replace="fragments/logo"/> -->
     <div layout:fragment="content" id="content">
         <h1/>
         <p/>
     </div>
+    <div th:replace="fragments/footer"/>
 </div>
 <div th:insert="fragments/bottom"/>
 <div th:replace="/fragments/css :: #css"></div>

@@ -2,8 +2,14 @@ package cn.jbone.sys.core.service;
 
 import cn.jbone.common.exception.JboneException;
 import cn.jbone.common.utils.PasswordUtils;
-import cn.jbone.sys.api.model.Menu;
-import cn.jbone.sys.api.model.UserModel;
+import cn.jbone.sys.common.*;
+import cn.jbone.sys.common.dto.ThirdPartyName;
+import cn.jbone.sys.common.dto.request.ChangePasswordRequestDTO;
+import cn.jbone.sys.common.dto.request.GithubUserLoginRequestDTO;
+import cn.jbone.sys.common.dto.request.ThirdPartyUserLoginRequestDTO;
+import cn.jbone.sys.common.dto.response.MenuInfoResponseDTO;
+import cn.jbone.sys.common.dto.response.UserInfoResponseDTO;
+import cn.jbone.sys.common.dto.response.UserSecurityQuestionsResponseDTO;
 import cn.jbone.sys.core.dao.domain.*;
 import cn.jbone.sys.core.dao.repository.*;
 import cn.jbone.sys.core.service.model.common.AssignPermissionModel;
@@ -44,6 +50,11 @@ public class UserService {
     @Autowired
     RbacOrganizationRepository organizationRepository;
 
+    @Autowired
+    RbacUserSecurityQuestionsRepository userSecurityQuestionsRepository;
+
+    @Autowired
+    GithubUserRepository githubUserRepository;
 
 
     /**
@@ -57,8 +68,8 @@ public class UserService {
      * @param serverName 服务名
      * @return 用户详细信息
      */
-    public UserModel getUserDetailByNameAndServerName(String username, String serverName) {
-        UserModel userModel = new UserModel();
+    public UserInfoResponseDTO getUserDetailByNameAndServerName(String username, String serverName) {
+        UserInfoResponseDTO userModel = new UserInfoResponseDTO();
         Set<String> permissions = new HashSet<String>();
         Set<String> roles = new HashSet<String>();
 
@@ -99,7 +110,7 @@ public class UserService {
         //如果不包含服务名，则不加载菜单信息
         if(!StringUtils.isBlank(serverName)){
             //解析前用户拥有的菜单
-            List<Menu> menuList = new ArrayList<>();
+            List<MenuInfoResponseDTO> menuList = new ArrayList<>();
             List<RbacMenuEntity> correctMenuList = new ArrayList<>();
 
             RbacSystemEntity systemEntity = systemRepository.findByName(serverName);
@@ -116,7 +127,7 @@ public class UserService {
             correctMenuList.addAll(userMenus);
 
             for (RbacMenuEntity menuEntity : correctMenuList){
-                Menu menu = new Menu();
+                MenuInfoResponseDTO menu = new MenuInfoResponseDTO();
                 BeanUtils.copyProperties(menuEntity,menu);
                 if(isContains(menuList,menu)){
                     continue;
@@ -128,9 +139,9 @@ public class UserService {
                 childMenus.addAll(childUserMenus);
 
                 if(!childMenus.isEmpty()){
-                    List<Menu> childMenuList = new ArrayList<>();
+                    List<MenuInfoResponseDTO> childMenuList = new ArrayList<>();
                     for (RbacMenuEntity childMenuEntity : childMenus){
-                        Menu childMenu = new Menu();
+                        MenuInfoResponseDTO childMenu = new MenuInfoResponseDTO();
                         BeanUtils.copyProperties(childMenuEntity,childMenu);
                         if(isContains(childMenuList,childMenu)){
                             continue;
@@ -153,6 +164,150 @@ public class UserService {
     }
 
 
+
+
+    /**
+     * 查询用户详情
+     * 1、用户基本信息
+     * 2、用户权限
+     * 3、用户角色
+     * 4、用户菜单
+     * 注：如果没有传服务名，则不加载用户菜单
+     * @return 用户详细信息
+     */
+    public UserResponseDO commonRequest(UserRequestDO userRequestDO) {
+
+        UserResponseDO userResponseDO = new UserResponseDO();
+        RbacUserEntity userEntity = null;
+        if(userRequestDO.getUserId() != null && userRequestDO.getUserId() > 0){
+            userEntity = userRepository.findById(userRequestDO.getUserId()).get();
+        }else if(StringUtils.isNotBlank(userRequestDO.getUsername())){
+            userEntity = userRepository.findByUsername(userRequestDO.getUsername());
+        }
+        if(userEntity == null){
+            throw new JboneException("user is not found");
+        }
+
+        //基本信息
+        UserBaseInfoDO userBaseInfoDO = new UserBaseInfoDO();
+        userBaseInfoDO.setAvatar(userEntity.getAvatar());
+        userBaseInfoDO.setEmail(userEntity.getEmail());
+        userBaseInfoDO.setId(userEntity.getId());
+        userBaseInfoDO.setRealname(userEntity.getRealname());
+        userBaseInfoDO.setPhone(userEntity.getPhone());
+        userBaseInfoDO.setSex(userEntity.getSex());
+        userBaseInfoDO.setUsername(userEntity.getUsername());
+
+        userResponseDO.setBaseInfo(userBaseInfoDO);
+
+        //安全相关信息
+        if(userRequestDO.containsModule(UserRequestDO.UserRequestModule.SECURITY)){
+            UserSecurityInfoDO userSecurityInfoDO = new UserSecurityInfoDO();
+            userSecurityInfoDO.setLocked(userEntity.getLocked());
+            userSecurityInfoDO.setPassword(userEntity.getPassword());
+            userSecurityInfoDO.setSalt(userEntity.getSalt());
+
+            userResponseDO.setSecurityInfo(userSecurityInfoDO);
+        }
+
+        //权限相关信息
+        if(userRequestDO.containsModule(UserRequestDO.UserRequestModule.AUTH)){
+            UserAuthInfoDO userAuthInfoDO = new UserAuthInfoDO();
+            userResponseDO.setAuthInfo(userAuthInfoDO);
+
+            Set<String> permissions = new HashSet<String>();
+            Set<String> roles = new HashSet<String>();
+
+            //用户角色
+            List<RbacRoleEntity> roleEntities = userEntity.getRoles();
+            if(roleEntities != null && !roleEntities.isEmpty()){
+                for(RbacRoleEntity roleEntity : roleEntities){
+                    roles.add(roleEntity.getName());
+
+                    //角色对应的权限
+                    List<RbacPermissionEntity> permissionEntities = roleEntity.getPermissions();
+                    if(permissionEntities != null && !permissionEntities.isEmpty()){
+                        for (RbacPermissionEntity permissionEntity : permissionEntities){
+                            permissions.add(permissionEntity.getPermissionValue());
+                        }
+                    }
+                }
+            }
+
+            userAuthInfoDO.setRoles(roles);
+
+            //用户权限
+            List<RbacPermissionEntity> permissionEntities =  userEntity.getPermissions();
+            if(permissionEntities != null && !permissionEntities.isEmpty()){
+                for(RbacPermissionEntity permissionEntity : permissionEntities){
+                    permissions.add(permissionEntity.getPermissionValue());
+                }
+            }
+
+            userAuthInfoDO.setPermissions(permissions);
+
+
+
+
+            //如果不包含服务名，则不加载菜单信息
+            if(!StringUtils.isBlank(userRequestDO.getServerName())){
+                //解析前用户拥有的菜单
+                List<MenuInfoResponseDTO> menuList = new ArrayList<>();
+                List<RbacMenuEntity> correctMenuList = new ArrayList<>();
+
+                RbacSystemEntity systemEntity = systemRepository.findByName(userRequestDO.getServerName());
+                if(systemEntity != null){
+                    List<RbacUserEntity> userCondition = new ArrayList<>();
+                    userCondition.add(userEntity);
+
+                    //获取用户和对应角色拥有的系统菜单
+                    List<RbacMenuEntity> roleMenus = menuRepository.findDistinctByRolesInAndPidAndSystemIdOrderByOrdersDesc(userEntity.getRoles(),0,systemEntity.getId());
+                    List<RbacMenuEntity> userMenus = menuRepository.findDistinctByUsersInAndPidAndSystemIdOrderByOrdersDesc(userCondition,0,systemEntity.getId());
+                    correctMenuList.addAll(roleMenus);
+                    correctMenuList.addAll(userMenus);
+
+                    for (RbacMenuEntity menuEntity : correctMenuList){
+                        MenuInfoResponseDTO menu = new MenuInfoResponseDTO();
+                        BeanUtils.copyProperties(menuEntity,menu);
+                        if(isContains(menuList,menu)){
+                            continue;
+                        }
+                        List<RbacMenuEntity> childRoleMenus = menuRepository.findDistinctByRolesInAndPidAndSystemIdOrderByOrdersDesc(userEntity.getRoles(),menuEntity.getId(),systemEntity.getId());
+                        List<RbacMenuEntity> childUserMenus = menuRepository.findDistinctByUsersInAndPidAndSystemIdOrderByOrdersDesc(userCondition,menuEntity.getId(),systemEntity.getId());
+                        List<RbacMenuEntity> childMenus = new ArrayList<>();
+                        childMenus.addAll(childRoleMenus);
+                        childMenus.addAll(childUserMenus);
+
+                        if(!childMenus.isEmpty()){
+                            List<MenuInfoResponseDTO> childMenuList = new ArrayList<>();
+                            for (RbacMenuEntity childMenuEntity : childMenus){
+                                MenuInfoResponseDTO childMenu = new MenuInfoResponseDTO();
+                                BeanUtils.copyProperties(childMenuEntity,childMenu);
+                                if(isContains(childMenuList,childMenu)){
+                                    continue;
+                                }
+                                childMenuList.add(childMenu);
+
+                            }
+                            Collections.sort(childMenuList);
+                            menu.setChildMenus(childMenuList);
+                        }
+
+                        menuList.add(menu);
+
+                    }
+                    Collections.sort(menuList);
+                    userAuthInfoDO.setMenus(menuList);
+                }
+            }
+        }
+
+
+
+        return userResponseDO;
+    }
+
+
     /**
      * 获取用户实体
      * @param username
@@ -170,8 +325,8 @@ public class UserService {
 
 
 
-    private boolean isContains(List<Menu> menuEntities,Menu menu){
-        for (Menu rbacMenuEntity : menuEntities){
+    private boolean isContains(List<MenuInfoResponseDTO> menuEntities, MenuInfoResponseDTO menu){
+        for (MenuInfoResponseDTO rbacMenuEntity : menuEntities){
             if(menu.getId() == rbacMenuEntity.getId()){
                 return true;
             }
@@ -200,7 +355,7 @@ public class UserService {
      * @param userModel
      */
     public void update(UpdateUserModel userModel){
-        RbacUserEntity userEntity = userRepository.findOne(userModel.getId());
+        RbacUserEntity userEntity = userRepository.getOne(userModel.getId());
         if(userEntity == null){
             throw new JboneException("没有找到用户");
         }
@@ -221,7 +376,7 @@ public class UserService {
             if(StringUtils.isBlank(id)){
                 continue;
             }
-            userRepository.delete(Integer.parseInt(id));
+            userRepository.deleteById(Integer.parseInt(id));
         }
     }
 
@@ -231,7 +386,7 @@ public class UserService {
      * @return
      */
     public RbacUserEntity findById(int id){
-        RbacUserEntity userEntity = userRepository.findOne(id);
+        RbacUserEntity userEntity = userRepository.getOne(id);
         if(userEntity == null){
             throw new JboneException("没有找到用户");
         }
@@ -246,8 +401,11 @@ public class UserService {
      * @param assignRoleModel
      */
     public void assignRole(AssignRoleModel assignRoleModel){
-        RbacUserEntity userEntity = userRepository.findOne(assignRoleModel.getUserId());
-        List<RbacRoleEntity> roleEntities =roleRepository.findByIdIn(assignRoleModel.getUserRole());
+        RbacUserEntity userEntity = userRepository.getOne(assignRoleModel.getUserId());
+        List<RbacRoleEntity> roleEntities = null;
+        if(assignRoleModel.getUserRole() != null && assignRoleModel.getUserRole().length > 0){
+            roleEntities = roleRepository.findByIdIn(assignRoleModel.getUserRole());
+        }
         userEntity.setRoles(roleEntities);
     }
 
@@ -291,7 +449,7 @@ public class UserService {
      */
     public void assignPermission(AssignPermissionModel permissionModel){
         //首先删除该系统下所有菜单
-        RbacUserEntity userEntity = userRepository.findOne(permissionModel.getId());
+        RbacUserEntity userEntity = userRepository.getOne(permissionModel.getId());
         List<RbacPermissionEntity> permissionEntities = userEntity.getPermissions();
         if(permissionEntities != null && !permissionEntities.isEmpty()){
             for (int i = 0;i < permissionEntities.size(); i++){
@@ -367,7 +525,7 @@ public class UserService {
      * @param modifyPasswordModel
      */
     public void modifyPassword(ModifyPasswordModel modifyPasswordModel){
-        RbacUserEntity userEntity = userRepository.findOne(modifyPasswordModel.getId());
+        RbacUserEntity userEntity = userRepository.getOne(modifyPasswordModel.getId());
         if(userEntity == null){
             throw new JboneException("没有找到用户");
         }
@@ -378,5 +536,86 @@ public class UserService {
         userRepository.save(userEntity);
     }
 
+    /**
+     * 获取用户安全问题
+     * @param username
+     * @return
+     */
+    public List<UserSecurityQuestionsResponseDTO> findUserSecurityQuestions(String username){
+        UserBaseInfoModel userBaseInfoModel = findByUserName(username);
+        int userId = userBaseInfoModel.getId();
+        List<RbacUserSecurityQuestionsEntity> list = userSecurityQuestionsRepository.findByUserId(userId);
+        if(list == null || list.isEmpty()){
+            return null;
+        }
+        List<UserSecurityQuestionsResponseDTO> responseDTOList = new ArrayList<>();
+        for(RbacUserSecurityQuestionsEntity entity:list){
+            UserSecurityQuestionsResponseDTO responseDTO = new UserSecurityQuestionsResponseDTO();
+            BeanUtils.copyProperties(entity,responseDTO);
+            responseDTOList.add(responseDTO);
+        }
+        return responseDTOList;
+    }
+
+
+    /**
+     * 修改密码
+     * @param changePasswordRequestDTO
+     */
+    public void modifyPassword(ChangePasswordRequestDTO changePasswordRequestDTO){
+        RbacUserEntity userEntity = userRepository.findByUsername(changePasswordRequestDTO.getUsername());
+        if(userEntity == null){
+            throw new JboneException("没有找到用户");
+        }
+        //使用时间撮作为盐值
+        String salt = System.currentTimeMillis() + "";
+        userEntity.setSalt(salt);
+        userEntity.setPassword(PasswordUtils.getMd5PasswordWithSalt(changePasswordRequestDTO.getPassword(),salt));
+        userRepository.save(userEntity);
+    }
+
+    /**
+     * 第三方登录
+     * @param thirdPartyUserLoginRequestDTO
+     */
+    public void thirdPartyLogin(ThirdPartyUserLoginRequestDTO thirdPartyUserLoginRequestDTO){
+        if(thirdPartyUserLoginRequestDTO.getThirdPartyName() == ThirdPartyName.GITHUB){
+            GithubUserLoginRequestDTO requestDTO = (GithubUserLoginRequestDTO)thirdPartyUserLoginRequestDTO;
+            GithubUserEntity githubUserEntity = githubUserRepository.findByGithubId(Long.parseLong(requestDTO.getId()));
+            if(githubUserEntity == null){
+                githubUserEntity = new GithubUserEntity();
+
+                //如果是第一次登录，默认添加用户并赋予guest角色
+                String username = ThirdPartyName.GITHUB.toString().toUpperCase() + "_" + requestDTO.getId();
+                CreateUserModel createUserModel = new CreateUserModel();
+                createUserModel.setAvatar(requestDTO.getAvatarUrl());
+                createUserModel.setEmail(requestDTO.getEmail());
+                createUserModel.setRealname(requestDTO.getName());
+                createUserModel.setUsername(username);
+                createUserModel.setPassword(username);
+                save(createUserModel);
+
+                RbacUserEntity userEntity = userRepository.findByUsername(username);
+                List<RbacRoleEntity> roleEntities = roleRepository.findByName("guest");
+                if(roleEntities != null && !roleEntities.isEmpty()){
+                    userEntity.setRoles(roleEntities);
+                }
+                githubUserEntity.setUserId(userEntity.getId());
+            }
+            githubUserEntity.setAvatarUrl(requestDTO.getAvatarUrl());
+            githubUserEntity.setBlog(requestDTO.getBlog());
+            githubUserEntity.setCompany(requestDTO.getCompany());
+            githubUserEntity.setEmail(requestDTO.getEmail());
+            githubUserEntity.setGithubId(Long.parseLong(requestDTO.getId()));
+            githubUserEntity.setHtmlUrl(requestDTO.getHtmlUrl());
+            githubUserEntity.setLogin(requestDTO.getLogin());
+            githubUserEntity.setName(requestDTO.getName());
+            githubUserEntity.setNodeId(requestDTO.getNodeId());
+
+
+            githubUserRepository.save(githubUserEntity);
+        }
+
+    }
 
 }

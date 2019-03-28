@@ -10,11 +10,11 @@ import java.util.Date;
 public class DateUtil extends DateUtils {
 
 
-	private final static String DATE_FORMAT = "yyyy-MM-dd";
+	public final static String DATE_FORMAT = "yyyy-MM-dd";
 
-    private final static String DATEPICKER_FORMAT = "MM/dd/yyyy";
+    public final static String DATEPICKER_FORMAT = "MM/dd/yyyy";
 
-    private final static String TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    public final static String TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
 
     public static Date getDate(String pattern){
@@ -24,6 +24,8 @@ public class DateUtil extends DateUtils {
         SimpleDateFormat dateFormat = null;
         if(pattern.indexOf("/") != -1){
             dateFormat = new SimpleDateFormat(DATEPICKER_FORMAT);
+        }else if(pattern.indexOf(":") != -1){
+            dateFormat = new SimpleDateFormat(TIME_FORMAT);
         }else{
             dateFormat = new SimpleDateFormat(DATE_FORMAT);
         }

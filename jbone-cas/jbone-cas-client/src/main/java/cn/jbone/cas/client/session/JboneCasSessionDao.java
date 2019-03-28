@@ -29,6 +29,16 @@ public class JboneCasSessionDao extends CachingSessionDAO {
 
     public static final String SESSION_KEY = "jbone_session_";
 
+    private JboneSessionTicketStore sessionTicketStore;
+
+    public JboneSessionTicketStore getSessionTicketStore() {
+        return sessionTicketStore;
+    }
+
+    public void setSessionTicketStore(JboneSessionTicketStore sessionTicketStore) {
+        this.sessionTicketStore = sessionTicketStore;
+    }
+
     @Override
     protected void doUpdate(Session session) {
         // 如果会话过期/停止 没必要再更新了
@@ -38,12 +48,16 @@ public class JboneCasSessionDao extends CachingSessionDAO {
         String sessionId = session.getId().toString();
         ValueOperations<String,String> operations = redisTemplate.opsForValue();
         operations.set(SESSION_KEY + sessionId, SerializableUtil.serialize(session),session.getTimeout(), TimeUnit.MILLISECONDS);
+        logger.info("ttl {} : {} S",SESSION_KEY + sessionId,redisTemplate.getExpire(SESSION_KEY + sessionId,TimeUnit.SECONDS));
+        sessionTicketStore.expireBySession(sessionId,session.getTimeout());
     }
 
     @Override
     protected void doDelete(Session session) {
         String sessionId = session.getId().toString();
         redisTemplate.delete(SESSION_KEY + sessionId);
+
+        sessionTicketStore.deleteBySession(sessionId);
     }
 
     @Override

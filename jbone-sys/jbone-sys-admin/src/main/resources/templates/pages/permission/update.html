@@ -14,22 +14,25 @@
         <input id="id" name="id" th:type="hidden" th:value="${permission.id}" />
         <input id="menuId" name="menuId" th:type="hidden" th:value="${permission.menuId}" />
         <div class="form-group">
-            <label for="systemId" class="col-sm-3 control-label">系统</label>
+            <label for="systemId" class="control-label">系统</label>
             <select id="systemId" name="systemId" class="form-control" onchange="loadMenu();">
                 <option value="0">请选择系统</option>
                 <option th:each="system,systemStat : ${systemList}" th:value="${system.id}" th:text="${system.title}"></option>
             </select>
         </div>
         <div class="form-group">
-            <label for="menu" class="col-sm-3 control-label">菜单</label>
+            <label for="menu" class="control-label">菜单</label>
             <div class="input-group">
                 <input id="menu" name="menu" type="text" class="form-control" readonly="readonly" />
                 <a id="menuBtn" href="#" class="input-group-addon" onclick="showMenu(); return false;">选择</a>
                 <a  href="#" class="input-group-addon" onclick="clearMenu(); return false;">清空</a>
+                <div id="menuContent" class="menuContent">
+                    <ul id="treeMenu" class="ztree" style="margin-top:0; width:250px;"></ul>
+                </div>
             </div>
         </div>
         <div class="form-group">
-            <label for="type" class="col-sm-3 control-label">权限类型</label>
+            <label for="type" class="control-label">权限类型</label>
             <select id="type" name="type" class="form-control">
                 <option value="1" selected="selected">功能</option>
                 <option value="2">菜单</option>
@@ -37,11 +40,11 @@
             </select>
         </div>
         <div class="form-group">
-            <label for="name" class="col-sm-3 control-label">权限名</label>
+            <label for="name" class="control-label">权限名</label>
             <input id="name" name="name" class="form-control" />
         </div>
         <div class="form-group">
-            <label for="permissionValue" class="col-sm-3 control-label">权限码</label>
+            <label for="permissionValue" class="control-label">权限码</label>
             <input id="permissionValue" name="permissionValue" class="form-control" />
         </div>
 
@@ -50,13 +53,9 @@
 
     </form>
 
-    <div id="menuContent" class="menuContent">
-        <ul id="treeMenu" class="ztree" style="margin-top:0; width:250px;"></ul>
-    </div>
 
 </div>
 
-<div th:replace="/layout/js :: #js"></div>
 <script type="text/javascript" th:src="@{/js/modalPage.js}"></script>
 <script type="text/javascript" th:src="@{/webjars/ztree/3.5.0/js/jquery.ztree.core-3.5.min.js}"></script>
 <script type="text/javascript" th:src="@{/webjars/ztree/3.5.0/js/jquery.ztree.excheck-3.5.min.js}"></script>
@@ -104,10 +103,8 @@
             chooseConfirm("请选择系统");
             return;
         }
-
         var menuObj = $("#menu");
-        var menuOffset = $("#menu").offset();
-        $("#menuContent").css({left:menuOffset.left + "px", top:menuOffset.top + menuObj.outerHeight() + "px"}).slideDown("fast");
+        $("#menuContent").css({'left' : "0px", 'top': menuObj.outerHeight() + "px"}).slideDown("fast");
         $("body").bind("mousedown", onBodyDown);
 
     }

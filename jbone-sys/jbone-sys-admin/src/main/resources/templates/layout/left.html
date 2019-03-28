@@ -12,10 +12,10 @@
             <!-- Sidebar user panel -->
             <div class="user-panel">
                 <div class="pull-left image">
-                    <img th:src="${user.avatar}" width="160" height="160" class="img-circle" alt="User Image"/>
+                    <img th:src="${user.baseInfo.avatar}" width="160" height="160" class="img-circle" alt="User Image"/>
                 </div>
                 <div class="pull-left info">
-                    <p th:text="${user.realname}">姓名</p>
+                    <p th:text="${user.baseInfo.realname}">姓名</p>
                     <a href="#"><i class="fa fa-circle text-success"></i> Online</a>
                 </div>
             </div>
@@ -42,7 +42,7 @@
                         </span>
                     </a>
                 </li>
-                <li th:each="menu,iterStat : ${user.menus}" class="treeview">
+                <li th:each="menu,iterStat : ${user.authInfo.menus}" class="treeview">
                     <a th:href="${menu.url}">
                         <i class="fa fa-pie-chart"></i>
                         <span th:text="${menu.name}"></span>
@@ -51,7 +51,7 @@
                         </span>
                     </a>
                     <ul class="treeview-menu" th:if="${not #lists.isEmpty(menu.childMenus)}" >
-                        <li th:each="cmenu : ${menu.childMenus}">
+                        <li th:each="cmenu : ${menu.childMenus}" class="cmenu">
                             <a href="javascript:void(0);" th:attr="addtabs=${cmenu.url},id=${cmenu.id},title=${cmenu.name},url=${cmenu.url}" closeable="true"><i class="fa fa-circle-o"></i> <font th:text="${cmenu.name}"></font></a>
                         </li>
                     </ul>

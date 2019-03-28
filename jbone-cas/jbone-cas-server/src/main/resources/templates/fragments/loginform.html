@@ -1,26 +1,6 @@
-<head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <title>JBone | 登录</title>
-    <!-- Tell the browser to be responsive to screen width -->
-    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-
-    <!-- Bootstrap 3.3.7 -->
-    <link rel="stylesheet" th:href="@{/webjars/adminlte/2.3.11/bootstrap/css/bootstrap.min.css}" />
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.5.0/css/font-awesome.min.css" />
-    <!-- Ionicons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/css/ionicons.min.css" />
-    <!-- Theme style -->
-    <link rel="stylesheet" th:href="@{/webjars/adminlte/2.3.11/dist/css/AdminLTE.min.css}" />
-    <!-- iCheck -->
-    <link rel="stylesheet" th:href="@{/webjars/adminlte/2.3.11/plugins/iCheck/square/blue.css}" />
-
-</head>
-
-<div class="login-box" id="login">
+<div id="login" class="login-box">
     <div class="login-box-body">
-        <p class="login-box-msg" th:text="#{cas.login.pagetitle}"></p>
+        <p class="login-box-msg">用户名密码登录</p>
         <form method="post" id="fm1" th:object="${credential}" action="login">
             <div class="alert alert-danger" th:if="${#fields.hasErrors('*')}">
                 <span th:each="err : ${#fields.errors('*')}" th:utext="${err}"/>
@@ -51,6 +31,28 @@
                     <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
                 </div>
             </div>
+            <div class="form-group">
+                            <span th:if="${availableAuthenticationHandlerNames != null}">
+                                <span th:if="${availableAuthenticationHandlerNames.size() > 1}">
+                                    <label for="source" th:utext="#{screen.welcome.label.source}">Source</label>
+                                    <div>
+                                        <select class="form-control required"
+                                                id="source"
+                                                name="source"
+                                                tabindex="0"
+                                                th:field="*{source}">
+                                            <option th:each="handler : ${availableAuthenticationHandlerNames}" th:value="${handler}" th:text="${handler}">Source</option>
+                                        </select>
+                                    </div>
+                                </span>
+                                <span th:if="${availableAuthenticationHandlerNames.size() == 1}">
+                                     <input type="hidden"
+                                            id="source"
+                                            name="source"
+                                            th:value="${availableAuthenticationHandlerNames.get(0)}"/>
+                                </span>
+                            </span>
+            </div>
 
             <div class="form-group has-feedback">
                 <div>
@@ -71,22 +73,32 @@
                     </span>
                 </div>
             </div>
-
+<!--
             <section class="row check">
                 <p th:if="${passwordManagementEnabled}">
                     <input type="checkbox" name="doChangePassword" id="doChangePassword" value="true" th:checked="${param.doChangePassword != null}" tabindex="4"/>
                     <label for="doChangePassword" th:text="#{screen.button.changePassword}"/>
                 </p>
             </section>
-
+-->
             <section class="row check">
-                <div th:if="${rememberMeAuthenticationEnabled}" class="checkbox icheck">
-                    <label for="rememberMe">
-                        <input type="checkbox" name="rememberMe"  id="rememberMe" value="true" tabindex="5"/>
-                        <font th:text="#{screen.rememberme.checkbox.title}"></font>
-                    </label>
-                </div>
+                <p th:if="${rememberMeAuthenticationEnabled}">
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" name="rememberMe" id="rememberMe" value="true" tabindex="5"> 记住我
+                        </label>
+                    </div>
+                </p>
             </section>
+
+            <!--<section class="row check">-->
+                <!--<div th:if="${rememberMeAuthenticationEnabled}" class="checkbox icheck">-->
+                    <!--<label for="rememberMe">-->
+                        <!--<input type="checkbox" name="rememberMe"  id="rememberMe" value="true" tabindex="5"/>-->
+                        <!--<font th:text="#{screen.rememberme.checkbox.title}"></font>-->
+                    <!--</label>-->
+                <!--</div>-->
+            <!--</section>-->
 
             <section class="row" th:if="${recaptchaSiteKey}">
                 <div class="g-recaptcha" th:attr="data-sitekey=${recaptchaSiteKey}"/>
@@ -97,7 +109,7 @@
                 <input type="hidden" name="_eventId" value="submit"/>
                 <input type="hidden" name="geolocation"/>
 
-                <input class="btn btn-submit btn-block"
+                <input class="btn btn-submit btn-block btn-flat"
                        name="submit"
                        accesskey="l"
                        th:value="#{screen.welcome.button.login}"
@@ -120,9 +132,38 @@
             <p/>
         </div>
 
+        <div class="social-auth-links text-center" th:if="${pac4jUrls}">
+                <div id="list-providers">
+                    <p th:utext="#{screen.welcome.label.loginwith}"/>
+
+                            <a th:each="entry: ${pac4jUrls}" th:switch="${entry.type}" class="btn btn-block btn-social btn-flat"
+                               th:classappend="'btn-' + ${entry.type}"
+                               th:href="${entry.redirectUrl}"
+                               th:inline="text"
+                               th:title="${entry.name}">
+
+                                <span th:case="twitter" class="fa fa-twitter-square"></span>
+                                <span th:case="foursquare" class="fa fa-foursquare"></span>
+                                <span th:case="windowslive" class="fa fa-windows"></span>
+                                <span th:case="yahoo" class="fa fa-yahoo"></span>
+                                <span th:case="bitbucket" class="fa fa-bitbucket"></span>
+                                <span th:case="wordpress" class="fa fa-wordpress"></span>
+                                <span th:case="google2" class="fa fa-google-plus"></span>
+                                <span th:case="github" class="fa fa-github-alt"></span>
+                                <span th:case="dropbox" class="fa fa-dropbox"></span>
+                                <span th:case="linkedin" class="fa fa-linkedin"></span>
+                                <span th:case="facebook" class="fa fa-facebook-square"></span>
+                                <span th:case="oidc" class="fa fa-openid"></span>
+                                <span th:case="saml2" th:class="${entry.cssClass}"></span>
+                                <span th:case="*" class="fa fa-sign-in"></span>
+
+                                [[${entry.name}]]
+                            </a>
+
+                </div>
+        </div>
+
     </div>
-
-
 
     <script type="text/javascript" th:inline="javascript">
         var i = [[#{screen.welcome.button.loginwip}]]
@@ -134,20 +175,3 @@
     </script>
     <div th:replace="fragments/loginsidebar"/>
 </div>
-
-<!-- jQuery 3 -->
-<script th:src="@{/webjars/adminlte/2.3.11/plugins/jQuery/jquery-2.2.3.min.js}"></script>
-<!-- Bootstrap 3.3.7 -->
-<script th:src="@{/webjars/adminlte/2.3.11/bootstrap/js/bootstrap.min.js}"></script>
-<!-- iCheck -->
-<script th:src="@{/webjars/adminlte/2.3.11/plugins/iCheck/icheck.min.js}"></script>
-
-<script>
-    $(function () {
-        $('input').iCheck({
-            checkboxClass: 'icheckbox_square-blue',
-            radioClass: 'iradio_square-blue',
-            increaseArea: '20%' // optional
-        });
-    });
-</script>

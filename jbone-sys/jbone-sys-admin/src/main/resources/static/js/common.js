@@ -155,11 +155,37 @@ function chooseConfirm(content){
 
 
 function openModal(title,url){
-    parent.$("#modal-title").text(title);
-    parent.$("#modal-iframe").attr("src",url);
-    parent.$('#iframe-loading').show();
-    var dialog = parent.$('#parentModal');
-    dialog.modal();
+    debugger;
+    var show_form_modal = parent.$("input[name='show_form_modal']:checked").val();
+    if(show_form_modal == "2"){
+        parent.$("#formTitle").text(title);
+        parent.$("#formContent").load(url,function(response,status,xhr){
+            debugger;
+            //"{"开头表示是后端返回的异常信息，正常情况下是HTML
+            if(response.toString().startsWith("{")){
+                var responseObj = JSON.parse(response);
+                failHandler(responseObj);
+            }else{
+                var formBox = parent.$('#formBox');
+                formBox.show();
+                parent.scroll(0,1000);
+            }
+        });
+    }else if(show_form_modal == "1"){
+        parent.$("#modal-title").text(title);
+        parent.$("#modal-body").load(url,function(response,status,xhr){
+            debugger;
+            //"{"开头表示是后端返回的异常信息，正常情况下是HTML
+            if(response.toString().startsWith("{")){
+                var responseObj = JSON.parse(response);
+                failHandler(responseObj);
+            }else {
+                var dialog = parent.$('#parentModal');
+                dialog.modal('show');
+            }
+        });
+    }
+
 }
 
 // 删除

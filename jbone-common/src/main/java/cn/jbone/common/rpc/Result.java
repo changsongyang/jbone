@@ -1,7 +1,6 @@
 package cn.jbone.common.rpc;
 
 import lombok.Data;
-import org.springframework.util.StringUtils;
 
 import java.io.Serializable;
 
@@ -16,6 +15,7 @@ public class Result<T> implements Serializable {
 
     private static final int STATUS_404 = 404;
     private static final int STATUS_500 = 500;
+    private static final int STATUS_PROTECTED = 1000;
     private static final int SUCCESS_CODE=0;
 
     public Result(int code, String message){
@@ -65,9 +65,28 @@ public class Result<T> implements Serializable {
         return wrapError(STATUS_500,message);
     }
 
+    /**
+     * 系统错误
+     * @return
+     */
+    public static Result wrap500Error() {
+        return wrap500Error("系统错误");
+    }
+
+    /**
+     * 系统熔断保护
+     * @return
+     */
+    public static Result wrapProtectedError() {
+        return wrapError(STATUS_PROTECTED,"系统熔断保护");
+    }
+
 
     public static Result wrapSuccess() {
         return new Result();
     }
 
+    public static <T> Result<T> wrapSuccess(T a) {
+        return new Result<>(a);
+    }
 }
